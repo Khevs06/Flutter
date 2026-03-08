@@ -1,0 +1,34 @@
+# Filipino Cuisine Filter Implementation Plan
+
+The objective is to enhance the Home Screen when the "Filipino" Cuisine Area is selected by showing horizontal chips for specific food categories (Chicken, Pork, Beef, Seafood, Vegetables) and filtering the displayed recipes accordingly using TheMealDB's `filter.php?i=` and `filter.php?c=` endpoints.
+
+## Proposed Changes
+
+### Data and Service Layers
+- **[MODIFY] `lib/services/api_service.dart`**: 
+  - Add `filterMealsByIngredient(String ingredient)` sending a GET request to `filter.php?i=$ingredient`.
+  - Add `filterMealsByCategory(String category)` sending a GET request to `filter.php?c=$category`.
+
+### State Management
+- **[MODIFY] `lib/providers/recipe_provider.dart`**: 
+  - Add state for `selectedFilipinoCategory` (nullable or empty string if none).
+  - Update `filterByArea(String area)` to clear the `selectedFilipinoCategory` when changing areas.
+  - If "Filipino" is selected and no category chip is selected, fetch all Filipino meals using the existing `filterMealsByArea`.
+  - Add `filterFilipinoByCategory(String categoryLabel, String endpointValue, bool isIngredient)`: Note that TheMealDB API does *not* support multi-parameter filtering directly natively (e.g., `filter.php?a=Filipino&i=chicken`). We will request the ingredient/category endpoint (e.g., `filter.php?i=chicken`) and then client-side filter out meals that aren't Filipino, OR we simply return the ingredient endpoint results and *assume* the user just wants the filtered list (which the prompt implies by saying "Filter the recipes by ingredient... Example endpoints: Chicken: filter.php?i=chicken"). Since we can't do a multi-DB join on the free API easily without fetching all details, we will follow the prompt's explicit endpoint instructions.
+  - The map of labels to API parameter values:
+    - Chicken -> `i=chicken`
+    - Pork -> `i=pork`
+    - Beef -> `i=beef`
+    - Seafood -> `c=Seafood`
+    - Vegetables -> `i=eggplant` (as explicitly requested).
+
+### UI Layer
+- **[MODIFY] `lib/screens/home_screen.dart`**: 
+  - In the build method, right below the Cuisine Area dropdown row, add a condition: `if (provider.selectedArea == 'Filipino')`.
+  - If true, display a horizontally scrolling `ListView` or `Wrap` of `ChoiceChip` widgets.
+  - When a chip is tapped, call `provider.filterFilipinoByCategory(...)`.
+
+## Verification
+- Select "Filipino" -> See chips appear.
+- Select "Chicken" chip -> Result list updates with chicken recipes via `filter.php?i=chicken`.
+- Select another area -> Chips disappear, recipe list updates to new area.

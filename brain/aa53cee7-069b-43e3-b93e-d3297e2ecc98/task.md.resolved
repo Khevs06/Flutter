@@ -1,0 +1,7 @@
+# Filipino Cuisine Filter Progress Tasks
+- [x] Requirements gathering and planning
+- [x] Update [services/api_service.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/services/api_service.dart) (add ingredient and category filter endpoints)
+- [x] Update [providers/recipe_provider.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/providers/recipe_provider.dart) (add category state and filtering logic)
+- [x] Update [screens/home_screen.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/screens/home_screen.dart) (add horizontal chips for Filipino categories)
+- [x] Ensure API results are accurately mapped and cross-filtered (or simulated cross-filtered)
+- [x] Verify functionality

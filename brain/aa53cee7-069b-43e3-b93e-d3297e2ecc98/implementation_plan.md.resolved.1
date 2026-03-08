@@ -1,0 +1,22 @@
+# Cuisine Area Filter Implementation Plan
+
+The objective is to add a dropdown filter on the Home Screen for Cuisine Area, including "Filipino" as an option, which fetches from TheMealDB filter API (`https://www.themealdb.com/api/json/v1/1/filter.php?a=`).
+
+## Proposed Changes
+
+### Data and Service Layers
+- **[MODIFY] [lib/models/meal.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/models/meal.dart)**: Ensure `Meal.fromJson` safely parses objects from the filter endpoint, which omit standard properties like `strCategory`, `strArea`, and `strInstructions`. (Currently, defaults are heavily relied upon, so it may already be mostly safe).
+- **[MODIFY] [lib/services/api_service.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/services/api_service.dart)**: Add a `filterMealsByArea(String area)` method sending a GET request to `filter.php?a=$area`.
+
+### State Management
+- **[MODIFY] [lib/providers/recipe_provider.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/providers/recipe_provider.dart)**: 
+  - Add state for `selectedArea` (e.g., "All", "Filipino", etc.).
+  - Add a method to trigger `filterMealsByArea` and update `_searchResults`.
+  - Maintain the existing [searchRecipes(String query)](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/providers/recipe_provider.dart#21-36) logic but clear the area filter when explicitly searching or integrate them mutually exclusively based on user prompt requirements. (Prompt says: "Keep existing search functionality").
+
+### UI Layer
+- **[MODIFY] [lib/screens/home_screen.dart](file:///C:/Users/Lenovo/.gemini/antigravity/scratch/recifinder/lib/screens/home_screen.dart)**: Add a `DropdownButton` or similar selector in the AppBar or below the search bar to allow the user to select the cuisine area. When changed, the selected area will trigger the provider to fetch and display the filtered results.
+
+## Verification
+- Test selecting "Filipino" on the Home Screen dropdown and ensure the list updates with Filipino meals.
+- Test normal searching still functions seamlessly without conflict.

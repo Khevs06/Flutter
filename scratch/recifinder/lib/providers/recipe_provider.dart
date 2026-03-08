@@ -1,0 +1,109 @@
+// lib/providers/recipe_provider.dart
+import 'package:flutter/foundation.dart';
+import '../models/meal.dart';
+import '../services/api_service.dart';
+
+class RecipeProvider with ChangeNotifier {
+  final ApiService _apiService = ApiService();
+
+  List<Meal> _searchResults = [];
+  List<Meal> get searchResults => _searchResults;
+
+  Meal? _selectedMeal;
+  Meal? get selectedMeal => _selectedMeal;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  String _selectedArea = 'All';
+  String get selectedArea => _selectedArea;
+
+  String? _selectedCategory;
+  String? get selectedCategory => _selectedCategory;
+
+  Future<void> filterByArea(String area) async {
+    _selectedArea = area;
+    _selectedCategory = null; // Clear sub-category filter when area changes
+    if (area == 'All') {
+      // Clear filter by searching for default or empty. We'll load the default 'chicken'
+      searchRecipes('chicken');
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _searchResults = await _apiService.filterMealsByArea(area);
+    } catch (e) {
+      _errorMessage = 'Failed to fetch recipes by area.';
+      _searchResults = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> filterByCategory(String label, String endpointQuery, bool isIngredient) async {
+    _selectedCategory = label;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (isIngredient) {
+        _searchResults = await _apiService.filterMealsByIngredient(endpointQuery);
+      } else {
+        _searchResults = await _apiService.filterMealsByCategory(endpointQuery);
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to fetch recipes by category.';
+      _searchResults = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> searchRecipes(String query) async {
+    _selectedArea = 'All'; // Reset filter explicitly
+    _selectedCategory = null;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _searchResults = await _apiService.searchMeals(query);
+    } catch (e) {
+      _errorMessage = 'Failed to fetch recipes. Please try again later.';
+      _searchResults = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchMealDetails(String id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _selectedMeal = await _apiService.getMealDetails(id);
+    } catch (e) {
+      _errorMessage = 'Failed to fetch meal details.';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+  
+  void clearSelectedMeal() {
+    _selectedMeal = null;
+    notifyListeners();
+  }
+}
