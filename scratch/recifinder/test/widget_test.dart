@@ -21,5 +21,15 @@ void main() {
 
     // There should be a search field on screen.
     expect(find.byType(TextField), findsOneWidget);
+
+    // With a non-empty key the floating action button is visible.
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+  });
+
+  testWidgets('AI button hidden when no key provided', (WidgetTester tester) async {
+    await tester.pumpWidget(const ReciFinderApp(openAiKey: ''));
+    expect(find.text('ReciFinder'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
   });
 }

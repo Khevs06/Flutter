@@ -15,27 +15,49 @@ class AiService {
 
   /// Creates a service instance using the supplied key.
   ///
-  /// Calling code is responsible for providing a non-empty value. A
-  /// convenience factory is provided to read the key from the Dart
-  /// environment (i.e. `--dart-define=OPENAI_API_KEY=…`).
-  AiService({required this.apiKey}) : assert(apiKey.isNotEmpty, 'API key cannot be empty');
+  /// The raw string is normalised to eliminate any characters that the web
+  /// `fetch` API cannot express in headers (ISO‑8859‑1). This guards against
+  /// stray whitespace or non‑ASCII symbols introduced during copy/paste, which
+  /// previously crashed the app on web, as you’ve seen.
+  ///
+  /// An empty key is still permitted; callers should use [isConfigured] to
+  /// check before attempting to perform a request.
+  AiService({required String apiKey}) : apiKey = _sanitizeKey(apiKey);
 
   /// Reads the API key from the `OPENAI_API_KEY` environment variable.
   ///
-  /// If the environment value is missing or empty an [ArgumentError] is
-  /// thrown. This mirrors the behaviour of the main application, which
-  /// should also make sure to pass a valid key.
+  /// The value is passed through the same sanitiser used by the regular
+  /// constructor; if you accidentally include non‑ASCII characters the key
+  /// will simply be stripped rather than blowing up the page.
   factory AiService.fromEnvironment() {
     const key = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
-    if (key.isEmpty) {
-      throw ArgumentError('OPENAI_API_KEY must be defined via --dart-define');
-    }
     return AiService(apiKey: key);
   }
 
   /// Sends a simple request to the GPT chat endpoint and returns the
   /// text output from the first choice.
+  /// Whether the service has a non-empty key configured.
+  bool get isConfigured => apiKey.isNotEmpty;
+
+  /// Remove characters that cannot be used in HTTP header values.
+  ///
+  /// According to the browser spec header values must be ISO‑8859‑1 (latin1)
+  /// strings, so drop anything above `0xFF`.  Also trim whitespace from both
+  /// ends.
+  static String _sanitizeKey(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return trimmed;
+    final buffer = StringBuffer();
+    for (final codeUnit in trimmed.codeUnits) {
+      if (codeUnit <= 0xFF) buffer.writeCharCode(codeUnit);
+    }
+    return buffer.toString();
+  }
+
   Future<String> askQuestion(String prompt) async {
+    if (apiKey.isEmpty) {
+      throw StateError('No API key configured for AiService');
+    }
     final response = await http.post(
       Uri.parse(_baseUrl),
       headers: {

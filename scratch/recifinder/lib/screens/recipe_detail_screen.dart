@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/recipe_provider.dart';
+import '../widgets/recipe_card.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final String mealId;
@@ -88,7 +89,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildInfoChip(context, Icons.category, meal.strCategory),
+                          _buildInfoChip(context, Icons.category, RecipeCard.displayCategory(meal.strCategory, meal.strArea)),
                           _buildInfoChip(context, Icons.public, meal.strArea),
                         ],
                       ),
@@ -181,4 +182,5 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
       ),
     );
   }
+
 }

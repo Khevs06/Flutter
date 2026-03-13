@@ -5,15 +5,17 @@ import 'providers/recipe_provider.dart';
 import 'providers/ai_provider.dart';
 import 'screens/home_screen.dart';
 
-void main() {
-  // API key for OpenAI. Provide via `--dart-define=OPENAI_API_KEY=...` when
-  // running the app. In this sample we simply read it from the Dart
-  // environment; the `AiService.fromEnvironment()` factory also uses the
-  // same variable and will throw an error if it’s missing. Avoid committing
-  // the key into source control – inject it at build/run time instead.
-  const openAiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(const ReciFinderApp(openAiKey: openAiKey));
+  // API key for OpenAI. Provide it via `--dart-define=OPENAI_API_KEY=...`.
+  // If you want to hard-code it for testing, set the default below.
+  const openAiKey = String.fromEnvironment(
+    'OPENAI_API_KEY',
+    defaultValue: '',
+  );
+
+  runApp(ReciFinderApp(openAiKey: openAiKey));
 }
 
 class ReciFinderApp extends StatelessWidget {

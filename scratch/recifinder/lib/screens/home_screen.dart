@@ -44,13 +44,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('ReciFinder', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.chat_bubble_outline),
-        tooltip: 'Ask the AI assistant',
-        onPressed: () => _showAiDialog(context),
+      floatingActionButton: Consumer<AiProvider>(
+        builder: (context, aiProv, child) {
+          if (!aiProv.isEnabled) {
+            // hide the button when there's no key configured
+            return const SizedBox.shrink();
+          }
+          return FloatingActionButton(
+            tooltip: 'Ask the AI assistant',
+            onPressed: () => _showAiDialog(context),
+            child: const Icon(Icons.chat_bubble_outline),
+          );
+        },
       ),
       body: Column(
         children: [
+          // warning banner removed – the AI key is now supplied via
+          // `--dart-define` and the UI shouldn't surface its absence.
+          // The floating action button itself is hidden when the
+          // assistant is disabled, so no extra indicator is needed.
           Container(
             padding: const EdgeInsets.all(16.0),
             color: Theme.of(context).colorScheme.primary.withAlpha(20),
@@ -220,7 +232,10 @@ class _HomeScreenState extends State<HomeScreen> {
       {'label': 'Pork', 'query': 'pork', 'isIngredient': true},
       {'label': 'Beef', 'query': 'beef', 'isIngredient': true},
       {'label': 'Seafood', 'query': 'Seafood', 'isIngredient': false},
-      {'label': 'Vegetables', 'query': 'eggplant', 'isIngredient': true},
+      // We want to show vegetable recipes, but the API has no "Vegetables"
+      // category – instead it uses "Vegetarian".  We request that category
+      // and then relabel it in the UI to keep the chip text friendly.
+      {'label': 'Vegetables', 'query': 'Vegetarian', 'isIngredient': false},
     ];
 
     return SizedBox(
@@ -228,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, _) => const SizedBox(width: 8),
         itemCount: filters.length,
         itemBuilder: (context, index) {
           final f = filters[index];
@@ -245,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showAiDialog(BuildContext context) {
-    final TextEditingController _aiController = TextEditingController();
+    final TextEditingController aiController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
@@ -257,14 +272,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
-                    controller: _aiController,
+                    controller: aiController,
                     decoration: const InputDecoration(
                       hintText: 'Ask something like "Suggest a pasta recipe"',
                     ),
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) {
-                      if (_aiController.text.trim().isNotEmpty) {
-                        ai.ask(_aiController.text.trim());
+                      if (aiController.text.trim().isNotEmpty) {
+                        ai.ask(aiController.text.trim());
                       }
                     },
                   ),
@@ -326,4 +341,5 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 }

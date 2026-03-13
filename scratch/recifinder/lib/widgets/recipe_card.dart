@@ -61,7 +61,7 @@ class RecipeCard extends StatelessWidget {
                       Icon(Icons.category, size: 16, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 4),
                       Text(
-                        meal.strCategory,
+                        RecipeCard.displayCategory(meal.strCategory, meal.strArea),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[700],
                             ),
@@ -84,5 +84,15 @@ class RecipeCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String displayCategory(String category, String area) {
+    // when filtering by vegetables we actually use the ingredient endpoint
+    // (eggplant) but many returned meals are tagged "Vegetarian". To avoid
+    // confusion we show "Vegetables" instead.
+    if (area == 'Filipino' && category.toLowerCase() == 'vegetarian') {
+      return 'Vegetables';
+    }
+    return category;
   }
 }

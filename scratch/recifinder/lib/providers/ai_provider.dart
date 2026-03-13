@@ -7,15 +7,16 @@ import '../services/ai_service.dart';
 class AiProvider with ChangeNotifier {
   final AiService _aiService;
 
-  /// [apiKey] may be omitted or empty; in that case we fall back to
-  /// environment variable via [AiService.fromEnvironment].
-  AiProvider({String? apiKey})
-      : _aiService = (apiKey != null && apiKey.isNotEmpty)
-            ? AiService(apiKey: apiKey)
-            : AiService.fromEnvironment();
+  /// [apiKey] may be null or empty; this allows the UI to run without
+  /// requiring a value to be passed in (e.g. when the app is launched without
+  /// `--dart-define=OPENAI_API_KEY=...`).
+  AiProvider({String? apiKey}) : _aiService = AiService(apiKey: apiKey ?? '');
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  /// True when we have an API key and service is usable.
+  bool get isEnabled => _aiService.isConfigured;
 
   String? _response;
   String? get response => _response;
@@ -32,6 +33,7 @@ class AiProvider with ChangeNotifier {
     try {
       _response = await _aiService.askQuestion(prompt);
     } catch (e) {
+      // Common case: no API key defined.
       _error = e.toString();
       _response = null;
     } finally {
