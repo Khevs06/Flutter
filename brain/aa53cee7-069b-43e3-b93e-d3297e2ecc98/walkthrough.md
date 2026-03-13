@@ -27,6 +27,7 @@ flutter run
 
 ### Build APK (for direct Android installation)
 
+scratch/recifinder/pubspec.yaml
 To build a release APK, execute the following command:
 ```bash
 cd C:\Users\Lenovo\.gemini\antigravity\scratch\recifinder

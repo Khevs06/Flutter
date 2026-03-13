@@ -11,20 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:recifinder/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('App builds and displays title', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const ReciFinderApp());
+    // pass a dummy key so our validation assertions don’t fire
+    await tester.pumpWidget(const ReciFinderApp(openAiKey: 'test-key'));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // The home screen should show our app bar title.
+    expect(find.text('ReciFinder'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // There should be a search field on screen.
+    expect(find.byType(TextField), findsOneWidget);
   });
 }

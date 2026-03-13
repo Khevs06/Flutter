@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
+import '../providers/ai_provider.dart';
 import '../widgets/recipe_card.dart';
 import 'recipe_detail_screen.dart';
 
@@ -42,6 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('ReciFinder', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.chat_bubble_outline),
+        tooltip: 'Ask the AI assistant',
+        onPressed: () => _showAiDialog(context),
       ),
       body: Column(
         children: [
@@ -121,8 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              if (provider.selectedArea == 'Filipino')
-                _buildFilipinoChips(context, provider),
+              // always show ingredient/category chips below the area selector
+              _buildIngredientChips(context, provider),
             ],
           );
         },
@@ -207,24 +213,88 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFilipinoChips(BuildContext context, RecipeProvider provider) {
+  Widget _buildIngredientChips(BuildContext context, RecipeProvider provider) {
+    // a basic hardcoded list of common ingredient filters
+    final filters = <Map<String, dynamic>>[
+      {'label': 'Chicken', 'query': 'chicken', 'isIngredient': true},
+      {'label': 'Pork', 'query': 'pork', 'isIngredient': true},
+      {'label': 'Beef', 'query': 'beef', 'isIngredient': true},
+      {'label': 'Seafood', 'query': 'Seafood', 'isIngredient': false},
+      {'label': 'Vegetables', 'query': 'eggplant', 'isIngredient': true},
+    ];
+
     return SizedBox(
       height: 50,
-      child: ListView(
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-        children: [
-          _buildChip(context, provider, 'Chicken', 'chicken', true),
-          const SizedBox(width: 8),
-          _buildChip(context, provider, 'Pork', 'pork', true),
-          const SizedBox(width: 8),
-          _buildChip(context, provider, 'Beef', 'beef', true),
-          const SizedBox(width: 8),
-          _buildChip(context, provider, 'Seafood', 'Seafood', false),
-          const SizedBox(width: 8),
-          _buildChip(context, provider, 'Vegetables', 'eggplant', true),
-        ],
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: filters.length,
+        itemBuilder: (context, index) {
+          final f = filters[index];
+          return _buildChip(
+            context,
+            provider,
+            f['label'] as String,
+            f['query'] as String,
+            f['isIngredient'] as bool,
+          );
+        },
       ),
+    );
+  }
+
+  void _showAiDialog(BuildContext context) {
+    final TextEditingController _aiController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Recipe Assistant'),
+          content: Consumer<AiProvider>(
+            builder: (context, ai, child) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _aiController,
+                    decoration: const InputDecoration(
+                      hintText: 'Ask something like "Suggest a pasta recipe"',
+                    ),
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) {
+                      if (_aiController.text.trim().isNotEmpty) {
+                        ai.ask(_aiController.text.trim());
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  if (ai.isLoading)
+                    const CircularProgressIndicator()
+                  else if (ai.response != null)
+                    SingleChildScrollView(
+                      child: Text(ai.response!),
+                    )
+                  else if (ai.error != null)
+                    Text(
+                      ai.error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Provider.of<AiProvider>(context, listen: false).clear();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 

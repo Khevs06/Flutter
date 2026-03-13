@@ -49,6 +49,10 @@ class RecipeProvider with ChangeNotifier {
   }
 
   Future<void> filterByCategory(String label, String endpointQuery, bool isIngredient) async {
+    // ingredient filters should not be restricted by cuisine area
+    if (isIngredient) {
+      _selectedArea = 'All';
+    }
     _selectedCategory = label;
     _isLoading = true;
     _errorMessage = null;
@@ -60,12 +64,37 @@ class RecipeProvider with ChangeNotifier {
       } else {
         _searchResults = await _apiService.filterMealsByCategory(endpointQuery);
       }
+      // after getting base list, ensure each meal has a valid area by
+      // fetching details when necessary (filter endpoints may omit area)
+      await _fillMissingAreas();
     } catch (e) {
       _errorMessage = 'Failed to fetch recipes by category.';
       _searchResults = [];
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _fillMissingAreas() async {
+    // only fetch details for meals where area is unknown or blank
+    final needsDetail = _searchResults
+        .where((m) => m.strArea.isEmpty || m.strArea == 'Unknown Area')
+        .toList();
+    if (needsDetail.isEmpty) return;
+
+    for (var meal in needsDetail) {
+      try {
+        final detail = await _apiService.getMealDetails(meal.idMeal);
+        if (detail != null) {
+          final index = _searchResults.indexWhere((m) => m.idMeal == meal.idMeal);
+          if (index != -1) {
+            _searchResults[index] = detail;
+          }
+        }
+      } catch (_) {
+        // ignore individual failures
+      }
     }
   }
 
