@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
 import '../providers/ai_provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/recipe_card.dart';
 import 'recipe_detail_screen.dart';
 
@@ -56,6 +57,72 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Icon(Icons.chat_bubble_outline),
           );
         },
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                final user = authProvider.user;
+                return UserAccountsDrawerHeader(
+                  accountName: Text(user?.displayName ?? user?.email ?? 'User'),
+                  accountEmail: Text(user?.email ?? ''),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundImage: user?.photoURL != null
+                        ? NetworkImage(user!.photoURL!)
+                        : null,
+                    child: user?.photoURL == null
+                        ? const Icon(Icons.person, size: 40)
+                        : null,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Home'),
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite),
+              title: const Text('Favorites'),
+              onTap: () {
+                // TODO: Navigate to favorites
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Favorites not implemented yet')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                // TODO: Navigate to settings
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Settings not implemented yet')),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                await context.read<AuthProvider>().signOut();
+                // AuthWrapper will handle navigation back to login
+              },
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

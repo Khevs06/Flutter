@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'providers/recipe_provider.dart';
 import 'providers/ai_provider.dart';
+import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/email_login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Temporarily disable Firebase for testing
+  // await Firebase.initializeApp();
 
   // API key for OpenAI. Provide it via `--dart-define=OPENAI_API_KEY=...`.
   // If you want to hard-code it for testing, set the default below.
@@ -28,6 +35,7 @@ class ReciFinderApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => RecipeProvider()),
         ChangeNotifierProvider(create: (_) => AiProvider(apiKey: openAiKey)),
       ],
@@ -47,8 +55,24 @@ class ReciFinderApp extends StatelessWidget {
             elevation: 0,
           ),
         ),
-        home: const HomeScreen(),
+        initialRoute: '/',
+        routes: {
+          '/': (context) => const AuthWrapper(),
+          '/login': (context) => const LoginScreen(),
+          '/email-login': (context) => const EmailLoginScreen(),
+          '/home': (context) => const HomeScreen(),
+        },
       ),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Temporarily show home screen directly for testing
+    return const HomeScreen();
   }
 }
